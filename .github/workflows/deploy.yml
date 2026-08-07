@@ -35,6 +35,14 @@ jobs:
     - name: Change base-tag in index.html
       run: sed -i 's/<base href="\/" \/>/<base href="\/GameHaven\/" \/>/g' release/wwwroot/index.html
 
+    - name: Fix blazor.webassembly.js filename
+      run: |
+        cd release/wwwroot/_framework
+        hashed_file=$(ls blazor.webassembly.*.js | head -n 1)
+        if [ -n "$hashed_file" ] && [ ! -f blazor.webassembly.js ]; then
+          cp $hashed_file blazor.webassembly.js
+        fi
+
     - name: Add .nojekyll file
       run: touch release/wwwroot/.nojekyll
 
