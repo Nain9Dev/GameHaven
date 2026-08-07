@@ -3,6 +3,8 @@ using GameHaven.Infrastructure.Persistence;
 using GameHaven.Application.Interfaces;
 using GameHaven.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +19,21 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddInfrastructure("Data Source=gamehaven.db");
 
+// Configure Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter(policyName: "fixed", config =>
+    {
+        config.PermitLimit = 60;
+        config.Window = TimeSpan.FromMinutes(1);
+        config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        config.QueueLimit = 2;
+    });
+    
+    // Optionally return 429 Too Many Requests instantly
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -29,6 +46,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
+app.UseRateLimiter();
 
 // ---- ENDPOINTS ----
 
@@ -40,7 +58,8 @@ app.MapGet("/api/games", async (IGameRepository gameRepo) =>
         g.Id, g.Title, g.Description, g.BasePrice, g.DiscountPercentage, g.CurrentPrice, g.CoverImageUrl, g.Developer
     }));
 })
-.WithName("GetCatalog");
+.WithName("GetCatalog")
+.RequireRateLimiting("fixed");
 
 app.MapGet("/api/library/{userId}", async (Guid userId, ILibraryRepository libRepo) =>
 {
@@ -53,7 +72,8 @@ app.MapGet("/api/library/{userId}", async (Guid userId, ILibraryRepository libRe
         OwnedGames = library.OwnedGames.Select(g => new { g.GameId, g.PurchaseDate, g.PlayTimeMinutes })
     });
 })
-.WithName("GetUserLibrary");
+.WithName("GetUserLibrary")
+.RequireRateLimiting("fixed");
 
 app.MapGet("/api/cart/{userId}", async (Guid userId, ICartRepository cartRepo) =>
 {
@@ -67,7 +87,8 @@ app.MapGet("/api/cart/{userId}", async (Guid userId, ICartRepository cartRepo) =
         Items = cart.Items.Select(i => new { i.GameId, i.PriceAtAddedTime })
     });
 })
-.WithName("GetCart");
+.WithName("GetCart")
+.RequireRateLimiting("fixed");
 
 app.MapPost("/api/cart/{userId}/add", async (Guid userId, [FromBody] AddToCartRequest req, ICartRepository cartRepo, ILibraryRepository libRepo, IGameRepository gameRepo, GameHavenDbContext db) =>
 {
@@ -96,7 +117,8 @@ app.MapPost("/api/cart/{userId}/add", async (Guid userId, [FromBody] AddToCartRe
         return Results.BadRequest(ex.Message);
     }
 })
-.WithName("AddToCart");
+.WithName("AddToCart")
+.RequireRateLimiting("fixed");
 
 app.MapPost("/api/cart/{userId}/checkout", async (Guid userId, ICartRepository cartRepo, ILibraryRepository libRepo, GameHavenDbContext db) =>
 {
@@ -120,7 +142,8 @@ app.MapPost("/api/cart/{userId}/checkout", async (Guid userId, ICartRepository c
 
     return Results.Ok("Checkout successful.");
 })
-.WithName("Checkout");
+.WithName("Checkout")
+.RequireRateLimiting("fixed");
 
 app.Run();
 
