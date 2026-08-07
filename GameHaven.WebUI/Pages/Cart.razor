@@ -18,7 +18,7 @@
     {
         <div class="empty-state">
             <p>Tu carrito está vacío.</p>
-            <button class="btn-primary" @onclick='() => Nav.NavigateTo("/")'>Seguir Comprando</button>
+            <button class="btn-primary" @onclick='() => Nav.NavigateTo("")'>Seguir Comprando</button>
         </div>
     }
     else
@@ -113,7 +113,7 @@
         if (response.IsSuccessStatusCode)
         {
             await JS.InvokeVoidAsync("alert", "¡Compra completada con éxito! Los juegos están en tu biblioteca.");
-            Nav.NavigateTo("library");
+            Nav.NavigateTo(Nav.BaseUri + "library");
         }
         else
         {
