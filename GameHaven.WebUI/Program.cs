@@ -8,7 +8,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 var apiBaseAddress = builder.HostEnvironment.IsDevelopment() 
     ? "http://localhost:5000" 
-    : "https://gamehaven.onrender.com"; // Future Render URL
+    : "https://gamehaven-97og.onrender.com";
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseAddress) });
 
