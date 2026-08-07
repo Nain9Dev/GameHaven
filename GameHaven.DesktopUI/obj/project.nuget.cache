@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "+gcN+w7ZcyI=",
+  "success": true,
+  "projectFilePath": "D:\\Development\\GameHaven\\GameHaven.DesktopUI\\GameHaven.DesktopUI.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\aitor\\.nuget\\packages\\microsoft.web.webview2\\1.0.4129.50\\microsoft.web.webview2.1.0.4129.50.nupkg.sha512"
+  ],
+  "logs": []
+}

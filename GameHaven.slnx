@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="GameHaven.Api/GameHaven.Api.csproj" />
+  <Project Path="GameHaven.Application/GameHaven.Application.csproj" />
+  <Project Path="GameHaven.DesktopUI/GameHaven.DesktopUI.csproj" />
+  <Project Path="GameHaven.Domain/GameHaven.Domain.csproj" />
+  <Project Path="GameHaven.Infrastructure/GameHaven.Infrastructure.csproj" />
+  <Project Path="GameHaven.WebUI/GameHaven.WebUI.csproj" />
+</Solution>

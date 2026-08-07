@@ -1,0 +1,6 @@
+@GameHaven.Api_HostAddress = http://localhost:5032
+
+GET {{GameHaven.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

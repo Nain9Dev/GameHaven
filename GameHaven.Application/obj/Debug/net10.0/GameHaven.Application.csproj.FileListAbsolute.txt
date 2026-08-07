@@ -1,0 +1,16 @@
+D:\Development\GameHaven\GameHaven.Application\bin\Debug\net10.0\GameHaven.Application.deps.json
+D:\Development\GameHaven\GameHaven.Application\bin\Debug\net10.0\GameHaven.Application.dll
+D:\Development\GameHaven\GameHaven.Application\bin\Debug\net10.0\GameHaven.Application.pdb
+D:\Development\GameHaven\GameHaven.Application\bin\Debug\net10.0\GameHaven.Domain.dll
+D:\Development\GameHaven\GameHaven.Application\bin\Debug\net10.0\GameHaven.Domain.pdb
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\GameHaven.Application.csproj.AssemblyReference.cache
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\GameHaven.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\GameHaven.Application.AssemblyInfoInputs.cache
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\GameHaven.Application.AssemblyInfo.cs
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\GameHaven.Application.csproj.CoreCompileInputs.cache
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\GameHaven.Application.sourcelink.json
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\GameHave.EC8575CD.Up2Date
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\GameHaven.Application.dll
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\refint\GameHaven.Application.dll
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\GameHaven.Application.pdb
+D:\Development\GameHaven\GameHaven.Application\obj\Debug\net10.0\ref\GameHaven.Application.dll

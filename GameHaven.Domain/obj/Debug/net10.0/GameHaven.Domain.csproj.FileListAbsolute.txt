@@ -1,0 +1,12 @@
+D:\Development\GameHaven\GameHaven.Domain\bin\Debug\net10.0\GameHaven.Domain.deps.json
+D:\Development\GameHaven\GameHaven.Domain\bin\Debug\net10.0\GameHaven.Domain.dll
+D:\Development\GameHaven\GameHaven.Domain\bin\Debug\net10.0\GameHaven.Domain.pdb
+D:\Development\GameHaven\GameHaven.Domain\obj\Debug\net10.0\GameHaven.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Development\GameHaven\GameHaven.Domain\obj\Debug\net10.0\GameHaven.Domain.AssemblyInfoInputs.cache
+D:\Development\GameHaven\GameHaven.Domain\obj\Debug\net10.0\GameHaven.Domain.AssemblyInfo.cs
+D:\Development\GameHaven\GameHaven.Domain\obj\Debug\net10.0\GameHaven.Domain.csproj.CoreCompileInputs.cache
+D:\Development\GameHaven\GameHaven.Domain\obj\Debug\net10.0\GameHaven.Domain.sourcelink.json
+D:\Development\GameHaven\GameHaven.Domain\obj\Debug\net10.0\GameHaven.Domain.dll
+D:\Development\GameHaven\GameHaven.Domain\obj\Debug\net10.0\refint\GameHaven.Domain.dll
+D:\Development\GameHaven\GameHaven.Domain\obj\Debug\net10.0\GameHaven.Domain.pdb
+D:\Development\GameHaven\GameHaven.Domain\obj\Debug\net10.0\ref\GameHaven.Domain.dll

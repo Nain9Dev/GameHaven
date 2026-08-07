@@ -1,0 +1,101 @@
+@page "/library"
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<PageTitle>GameHaven - Biblioteca</PageTitle>
+
+<div class="store-container" style="padding: 40px 24px;">
+    <h2 style="margin-bottom: 24px;">Tu Colección de Juegos</h2>
+    
+    @if (library == null)
+    {
+        <p><em>Cargando...</em></p>
+    }
+    else if (!library.OwnedGames.Any())
+    {
+        <div class="empty-state">
+            <p>Aún no tienes juegos en tu biblioteca.</p>
+            <button class="btn-primary" @onclick='() => Nav.NavigateTo("/")'>Ir a la Tienda</button>
+        </div>
+    }
+    else
+    {
+        <div class="game-grid">
+            @foreach (var gameId in library.OwnedGames.Select(g => g.GameId))
+            {
+                var gameDetails = GetGameDetails(gameId);
+                if (gameDetails != null)
+                {
+                    <div class="game-card library-card">
+                        <img src="Images/@gameDetails.CoverImageUrl" alt="@gameDetails.Title" class="game-cover" onerror="this.src='Images/001-DeathInProgress.png'" />
+                        <div class="game-info" style="text-align: center;">
+                            <h3 class="game-title">@gameDetails.Title</h3>
+                            <button class="btn-primary play-btn" @onclick="() => PlayGame(gameDetails.Title)">
+                                JUGAR
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .library-card {
+        border: 2px solid transparent;
+    }
+    .library-card:hover {
+        border: 2px solid var(--color-primary);
+    }
+    .play-btn {
+        width: 100%;
+        margin-top: 12px;
+        background: linear-gradient(135deg, #4caf50, #2e7d32); /* Green play button like Steam */
+    }
+    .play-btn:hover {
+        filter: brightness(1.2);
+    }
+</style>
+
+@code {
+    private LibraryDto? library;
+    private GameDto[]? allGames;
+    private Guid demoUserId = new Guid("11111111-1111-1111-1111-111111111111");
+
+    protected override async Task OnInitializedAsync()
+    {
+        allGames = await Http.GetFromJsonAsync<GameDto[]>("api/games");
+        library = await Http.GetFromJsonAsync<LibraryDto>($"api/library/{demoUserId}");
+    }
+
+    private GameDto? GetGameDetails(Guid gameId)
+    {
+        return allGames?.FirstOrDefault(g => g.Id == gameId);
+    }
+
+    private async Task PlayGame(string title)
+    {
+        await JS.InvokeVoidAsync("alert", $"Iniciando {title}... ¡Diviértete!");
+    }
+
+    public class LibraryDto
+    {
+        public Guid UserId { get; set; }
+        public List<OwnedGameDto> OwnedGames { get; set; } = new();
+    }
+
+    public class OwnedGameDto
+    {
+        public Guid GameId { get; set; }
+        public int PlayTimeMinutes { get; set; }
+    }
+
+    public class GameDto
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; } = "";
+        public string CoverImageUrl { get; set; } = "";
+    }
+}

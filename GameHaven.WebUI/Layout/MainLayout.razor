@@ -1,0 +1,56 @@
+@inherits LayoutComponentBase
+
+<div class="app-layout">
+    <header class="top-bar">
+        <div class="brand">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="var(--color-primary-strong)" />
+                        <stop offset="100%" stop-color="var(--color-primary)" />
+                    </linearGradient>
+                </defs>
+                <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+            </svg>
+            GameHaven
+        </div>
+        <nav class="nav-links">
+            <a href="/" class="nav-item active">Tienda</a>
+            <a href="/library" class="nav-item">Biblioteca</a>
+            <a href="/cart" class="nav-item">Carrito</a>
+        </nav>
+        <div class="user-actions">
+            <button class="btn-primary">
+                Reclutador Demo
+            </button>
+        </div>
+    </header>
+
+    <main class="content-area">
+        @Body
+    </main>
+
+    <footer class="legal-footer">
+        <p><strong>Portfolio Demo Project</strong> — Este es un proyecto de demostración (Clon de Steam) desarrollado con fines educativos por NainDev.</p>
+        <p>No se realizan transacciones reales. Los nombres, imágenes y marcas de los videojuegos mostrados son propiedad de sus respectivos creadores/estudios originales y se utilizan exclusivamente bajo el principio de "Fair Use" (Uso Justo) para propósitos de portafolio y educación. Si representas a alguno de los estudios y deseas que se retire la imagen, contacta a través de naindev.com.</p>
+    </footer>
+</div>
+
+<style>
+    .legal-footer {
+        margin-top: auto;
+        padding: 32px 24px;
+        background: rgba(8, 11, 22, 0.9);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        text-align: center;
+        color: var(--color-text-muted);
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+    .legal-footer p {
+        margin: 4px 0;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+</style>
