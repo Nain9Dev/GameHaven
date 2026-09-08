@@ -1,3 +1,0 @@
-D:\Development\GameHaven\release\GameHaven.WebUI.runtimeconfig.json
-D:\Development\GameHaven\release\dotnet.js
-D:\Development\GameHaven\release\web.config
