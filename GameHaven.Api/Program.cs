@@ -1,7 +1,7 @@
-using GameHaven.Infrastructure;
-using GameHaven.Infrastructure.Persistence;
 using GameHaven.Application.Interfaces;
 using GameHaven.Domain.Entities;
+using GameHaven.Infrastructure;
+using GameHaven.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
@@ -13,13 +13,12 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
-        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
 builder.Services.AddInfrastructure("Data Source=gamehaven.db");
 
-// Configure Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter(policyName: "fixed", config =>
@@ -29,8 +28,7 @@ builder.Services.AddRateLimiter(options =>
         config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         config.QueueLimit = 2;
     });
-    
-    // Optionally return 429 Too Many Requests instantly
+
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
@@ -50,23 +48,33 @@ app.UseRateLimiter();
 
 // ---- ENDPOINTS ----
 
+// Cheap unauthenticated probe. The public demo pings it on load to wake the
+// free-tier container while the storefront renders its offline snapshot.
+app.MapGet("/api/health", () => Results.Ok(new { status = "ok", utc = DateTime.UtcNow }))
+    .WithName("HealthCheck");
+
 app.MapGet("/api/games", async (IGameRepository gameRepo) =>
 {
     var games = await gameRepo.GetAllAsync();
-    return Results.Ok(games.Select(g => new 
-    {
-        g.Id, g.Title, g.Description, g.BasePrice, g.DiscountPercentage, g.CurrentPrice, g.CoverImageUrl, g.Developer
-    }));
+    return Results.Ok(games.Select(ToCatalogEntry));
 })
 .WithName("GetCatalog")
 .RequireRateLimiting("fixed");
 
-app.MapGet("/api/library/{userId}", async (Guid userId, ILibraryRepository libRepo) =>
+app.MapGet("/api/games/{id:guid}", async (Guid id, IGameRepository gameRepo) =>
+{
+    var game = await gameRepo.GetByIdAsync(id);
+    return game is null ? Results.NotFound() : Results.Ok(ToCatalogEntry(game));
+})
+.WithName("GetGame")
+.RequireRateLimiting("fixed");
+
+app.MapGet("/api/library/{userId:guid}", async (Guid userId, ILibraryRepository libRepo) =>
 {
     var library = await libRepo.GetByUserIdAsync(userId);
     if (library == null) return Results.Ok(new { UserId = userId, OwnedGames = Array.Empty<object>() });
 
-    return Results.Ok(new 
+    return Results.Ok(new
     {
         library.UserId,
         OwnedGames = library.OwnedGames.Select(g => new { g.GameId, g.PurchaseDate, g.PlayTimeMinutes })
@@ -75,12 +83,12 @@ app.MapGet("/api/library/{userId}", async (Guid userId, ILibraryRepository libRe
 .WithName("GetUserLibrary")
 .RequireRateLimiting("fixed");
 
-app.MapGet("/api/cart/{userId}", async (Guid userId, ICartRepository cartRepo) =>
+app.MapGet("/api/cart/{userId:guid}", async (Guid userId, ICartRepository cartRepo) =>
 {
     var cart = await cartRepo.GetByUserIdAsync(userId);
     if (cart == null) return Results.Ok(new { UserId = userId, Items = Array.Empty<object>(), TotalAmount = 0 });
 
-    return Results.Ok(new 
+    return Results.Ok(new
     {
         cart.UserId,
         cart.TotalAmount,
@@ -90,7 +98,13 @@ app.MapGet("/api/cart/{userId}", async (Guid userId, ICartRepository cartRepo) =
 .WithName("GetCart")
 .RequireRateLimiting("fixed");
 
-app.MapPost("/api/cart/{userId}/add", async (Guid userId, [FromBody] AddToCartRequest req, ICartRepository cartRepo, ILibraryRepository libRepo, IGameRepository gameRepo, GameHavenDbContext db) =>
+app.MapPost("/api/cart/{userId:guid}/add", async (
+    Guid userId,
+    [FromBody] AddToCartRequest req,
+    ICartRepository cartRepo,
+    ILibraryRepository libRepo,
+    IGameRepository gameRepo,
+    GameHavenDbContext db) =>
 {
     var game = await gameRepo.GetByIdAsync(req.GameId);
     if (game == null) return Results.NotFound("Game not found.");
@@ -112,7 +126,7 @@ app.MapPost("/api/cart/{userId}/add", async (Guid userId, [FromBody] AddToCartRe
         await db.SaveChangesAsync();
         return Results.Ok();
     }
-    catch(Exception ex)
+    catch (InvalidOperationException ex)
     {
         return Results.BadRequest(ex.Message);
     }
@@ -120,7 +134,27 @@ app.MapPost("/api/cart/{userId}/add", async (Guid userId, [FromBody] AddToCartRe
 .WithName("AddToCart")
 .RequireRateLimiting("fixed");
 
-app.MapPost("/api/cart/{userId}/checkout", async (Guid userId, ICartRepository cartRepo, ILibraryRepository libRepo, GameHavenDbContext db) =>
+app.MapPost("/api/cart/{userId:guid}/remove", async (
+    Guid userId,
+    [FromBody] AddToCartRequest req,
+    ICartRepository cartRepo,
+    GameHavenDbContext db) =>
+{
+    var cart = await cartRepo.GetByUserIdAsync(userId);
+    if (cart == null) return Results.NotFound("Cart not found.");
+
+    cart.RemoveItem(req.GameId);
+    await db.SaveChangesAsync();
+    return Results.Ok();
+})
+.WithName("RemoveFromCart")
+.RequireRateLimiting("fixed");
+
+app.MapPost("/api/cart/{userId:guid}/checkout", async (
+    Guid userId,
+    ICartRepository cartRepo,
+    ILibraryRepository libRepo,
+    GameHavenDbContext db) =>
 {
     var cart = await cartRepo.GetByUserIdAsync(userId);
     if (cart == null || !cart.Items.Any()) return Results.BadRequest("Cart is empty.");
@@ -134,7 +168,10 @@ app.MapPost("/api/cart/{userId}/checkout", async (Guid userId, ICartRepository c
 
     foreach (var item in cart.Items)
     {
-        library.AddGame(item.GameId);
+        // A cart can outlive a purchase of the same title in another tab, so skip
+        // duplicates instead of letting the aggregate throw mid-checkout.
+        if (!library.HasGame(item.GameId))
+            library.AddGame(item.GameId);
     }
 
     cart.Clear();
@@ -146,6 +183,22 @@ app.MapPost("/api/cart/{userId}/checkout", async (Guid userId, ICartRepository c
 .RequireRateLimiting("fixed");
 
 app.Run();
+
+static object ToCatalogEntry(Game game) => new
+{
+    game.Id,
+    game.Title,
+    game.Description,
+    game.BasePrice,
+    game.DiscountPercentage,
+    game.CurrentPrice,
+    game.CoverImageUrl,
+    game.Developer,
+    game.Publisher,
+    game.Genre,
+    game.RatingPercentage,
+    game.ReleaseDate
+};
 
 public class AddToCartRequest
 {
