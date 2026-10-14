@@ -1,0 +1,133 @@
+@page "/arquitectura"
+@implements IAsyncDisposable
+@inject BrowserEffects Effects
+
+<PageTitle>GameHaven — Arquitectura</PageTitle>
+
+<div class="shell">
+    <header class="page-header">
+        <h1>Cómo está construida</h1>
+        <p>
+            GameHaven no es una maqueta: es una aplicación completa con dominio, casos de
+            uso, persistencia, API y cliente, desplegada de punta a punta. Esta página
+            resume qué hace cada capa y por qué se tomó cada decisión.
+        </p>
+    </header>
+
+    <h2 class="section-title">Las cinco capas</h2>
+
+    <div class="layer-stack">
+        @foreach (var layer in Layers)
+        {
+            <article class="layer-card" @key="layer.Name" data-reveal>
+                <span class="layer-index">@layer.Index</span>
+                <div>
+                    <h3>@layer.Name</h3>
+                    <p>@layer.Summary</p>
+                    <div class="tech-rail">
+                        @foreach (var tech in layer.Technologies)
+                        {
+                            <span class="tech-chip">@tech</span>
+                        }
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+
+    <h2 class="section-title">Decisiones que sostienen la demo</h2>
+
+    <div class="layer-stack">
+        @foreach (var decision in Decisions)
+        {
+            <article class="layer-card" @key="decision.Title" data-reveal>
+                <span class="layer-index">·</span>
+                <div>
+                    <h3>@decision.Title</h3>
+                    <p>@decision.Rationale</p>
+                </div>
+            </article>
+        }
+    </div>
+
+    <h2 class="section-title">El resto del trabajo</h2>
+
+    <div class="callout" data-reveal>
+        <h2>Esta tienda es una pieza de un portfolio más amplio</h2>
+        <p>
+            GameHaven demuestra full-stack .NET con despliegue real. En naindev.com hay
+            más piezas del mismo tipo: pipelines de IA generativa, motores de e-commerce
+            con CQRS y servicios orientados a eventos, todos con demo pública y código
+            abierto.
+        </p>
+        <div class="callout-actions">
+            <a class="btn-primary" href="@PortfolioUrl" target="_blank" rel="noopener noreferrer">
+                Ver naindev.com
+            </a>
+            <a class="btn-ghost" href="@RepositoryUrl" target="_blank" rel="noopener noreferrer">
+                Código de GameHaven
+            </a>
+            <a class="btn-ghost" href="@SwaggerUrl" target="_blank" rel="noopener noreferrer">
+                Probar la API
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private const string PortfolioUrl = "https://www.naindev.com/?utm_source=gamehaven&utm_medium=demo&utm_campaign=arquitectura";
+    private const string RepositoryUrl = "https://github.com/Nain9Dev/GameHaven";
+    private const string SwaggerUrl = "https://gamehaven-97og.onrender.com/swagger";
+
+    private sealed record Layer(string Index, string Name, string Summary, string[] Technologies);
+
+    private sealed record Decision(string Title, string Rationale);
+
+    private static readonly Layer[] Layers =
+    {
+        new("01", "Domain",
+            "Entidades con invariantes propias: un carrito rechaza duplicados, un descuento fuera de rango lanza excepción y el precio final se calcula dentro del agregado. Sin dependencias externas.",
+            new[] { "C#", ".NET 10", "POCO", "Sin dependencias" }),
+
+        new("02", "Application",
+            "Contratos de los casos de uso. Define qué necesita la aplicación (repositorios de catálogo, carrito y biblioteca) sin saber cómo se implementan.",
+            new[] { "Interfaces", "Inversión de dependencias" }),
+
+        new("03", "Infrastructure",
+            "La única capa que toca la base de datos. Implementa los repositorios sobre EF Core y siembra el catálogo en el arranque.",
+            new[] { "EF Core 10", "SQLite", "Repository" }),
+
+        new("04", "API",
+            "Minimal APIs sobre .NET 10: siete endpoints, rate limiting nativo por ventana fija, CORS explícito y Swagger público.",
+            new[] { "Minimal APIs", "Rate limiting", "Swagger", "Docker" }),
+
+        new("05", "WebUI",
+            "Blazor WebAssembly como SPA estática. Un único servicio de tienda gobierna catálogo, carrito y biblioteca; los efectos 3D viven en un módulo JS aislado con su propio ciclo de vida.",
+            new[] { "Blazor WASM", "Three.js", "GitHub Pages" })
+    };
+
+    private static readonly Decision[] Decisions =
+    {
+        new("Blazor WebAssembly sobre GitHub Pages",
+            "La interfaz compila a ficheros estáticos, así que se sirve desde un CDN gratuito y sin servidor. El coste de alojar el frontend es exactamente cero y el despliegue es un push a master."),
+
+        new("Catálogo local como red de seguridad",
+            "La API vive en un contenedor gratuito que se duerme tras un rato inactivo y tarda hasta un minuto en despertar. Si no responde en ocho segundos, la tienda carga una copia del catálogo incluida en el propio bundle y guarda el carrito en localStorage. El visitante nunca se encuentra una pantalla vacía."),
+
+        new("Sesión anónima, sin cuentas ni datos personales",
+            "Cada navegador genera un identificador propio la primera vez que entra. Es lo justo para que carrito y biblioteca estén aislados entre visitantes, sin registro, sin correo y sin nada que proteger."),
+
+        new("Rate limiting en el borde de la API",
+            "Sesenta peticiones por minuto y ventana fija. Es una demo pública y gratuita: el límite evita que un bucle accidental agote la cuota del contenedor."),
+
+        new("Los efectos 3D nunca bloquean el contenido",
+            "El hero WebGL, la inclinación de las tarjetas y las animaciones de entrada se cargan aparte y se desactivan solas si el navegador pide movimiento reducido, si no hay WebGL o si el módulo falla. La tienda sigue siendo legible y usable en todos esos casos.")
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await Effects.InitRevealAsync();
+    }
+
+    public async ValueTask DisposeAsync() => await Effects.DisposeAsync();
+}

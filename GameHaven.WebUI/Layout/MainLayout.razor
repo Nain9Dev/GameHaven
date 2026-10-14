@@ -1,29 +1,43 @@
 @inherits LayoutComponentBase
+@implements IDisposable
+@inject StoreClient Store
+
+<div class="ambient-field" aria-hidden="true"></div>
+<div class="ambient-grid" aria-hidden="true"></div>
 
 <div class="app-layout">
     <header class="top-bar">
-        <div class="brand">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="var(--color-primary-strong)" />
-                        <stop offset="100%" stop-color="var(--color-primary)" />
-                    </linearGradient>
-                </defs>
-                <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-            </svg>
+        <a class="brand" href="" @onclick:preventDefault="false">
+            <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 9 18.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+                </svg>
+            </span>
             GameHaven
-        </div>
-        <nav class="nav-links">
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación principal">
             <NavLink class="nav-item" href="" Match="NavLinkMatch.All">Tienda</NavLink>
-            <NavLink class="nav-item" href="library">Biblioteca</NavLink>
-            <NavLink class="nav-item" href="cart">Carrito</NavLink>
+            <NavLink class="nav-item" href="library">
+                Biblioteca
+                @if (Store.LibraryCount > 0)
+                {
+                    <span class="nav-count">@Store.LibraryCount</span>
+                }
+            </NavLink>
+            <NavLink class="nav-item" href="cart">
+                Carrito
+                @if (Store.CartCount > 0)
+                {
+                    <span class="nav-count">@Store.CartCount</span>
+                }
+            </NavLink>
+            <NavLink class="nav-item" href="arquitectura">Arquitectura</NavLink>
         </nav>
-        <div class="user-actions">
-            <button class="btn-primary">
-                Mi Cuenta
-            </button>
-        </div>
+
+        <a class="portfolio-link" href="@PortfolioUrl" target="_blank" rel="noopener noreferrer">
+            <span>Proyecto de</span> naindev.com
+        </a>
     </header>
 
     <main class="content-area">
@@ -31,26 +45,67 @@
     </main>
 
     <footer class="legal-footer">
-        <p><strong>Portfolio Demo Project</strong> — Este es un proyecto de demostración (Clon de Steam) desarrollado con fines educativos por NainDev.</p>
-        <p>No se realizan transacciones reales. Los nombres, imágenes y marcas de los videojuegos mostrados son propiedad de sus respectivos creadores/estudios originales y se utilizan exclusivamente bajo el principio de "Fair Use" (Uso Justo) para propósitos de portafolio y educación. Si representas a alguno de los estudios y deseas que se retire la imagen, contacta a través de naindev.com.</p>
+        <div class="shell">
+            <div class="footer-grid">
+                <div>
+                    <h4>GameHaven</h4>
+                    <p>
+                        Demo pública de una tienda digital construida con Clean Architecture:
+                        Blazor WebAssembly en GitHub Pages consumiendo Minimal APIs de .NET 10,
+                        con coste de infraestructura cero.
+                    </p>
+                </div>
+
+                <div>
+                    <h4>La demo</h4>
+                    <div class="footer-links">
+                        <a href="">Tienda</a>
+                        <a href="library">Biblioteca</a>
+                        <a href="cart">Carrito</a>
+                        <a href="arquitectura">Arquitectura</a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4>NainDev</h4>
+                    <div class="footer-links">
+                        <a href="@PortfolioUrl" target="_blank" rel="noopener noreferrer">Portfolio</a>
+                        <a href="@ProjectsUrl" target="_blank" rel="noopener noreferrer">Otros proyectos</a>
+                        <a href="@RepositoryUrl" target="_blank" rel="noopener noreferrer">Código en GitHub</a>
+                        <a href="@SwaggerUrl" target="_blank" rel="noopener noreferrer">API (Swagger)</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="legal-note">
+                <p>
+                    <strong>Proyecto de portfolio.</strong> GameHaven es una demostración técnica
+                    sin ánimo de lucro. No se procesan pagos ni se recogen datos personales: la
+                    sesión es un identificador anónimo guardado en tu navegador.
+                </p>
+                <p>
+                    Los nombres de estudio, precios, descuentos y valoraciones son datos ficticios
+                    de demostración. Las portadas pertenecen a sus creadores originales y se
+                    muestran con fines educativos y de portfolio. Si representas a alguno de los
+                    estudios y quieres que se retire una imagen, escribe a través de naindev.com.
+                </p>
+            </div>
+        </div>
     </footer>
 </div>
 
-<style>
-    .legal-footer {
-        margin-top: auto;
-        padding: 32px 24px;
-        background: rgba(8, 11, 22, 0.9);
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-        text-align: center;
-        color: var(--color-text-muted);
-        font-size: 0.8rem;
-        line-height: 1.5;
-    }
-    .legal-footer p {
-        margin: 4px 0;
-        max-width: 800px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-</style>
+<ToastHost />
+
+@code {
+    // UTM tags let the portfolio attribute traffic that arrives from the demo.
+    private const string PortfolioUrl = "https://www.naindev.com/?utm_source=gamehaven&utm_medium=demo&utm_campaign=portfolio";
+    private const string ProjectsUrl = "https://www.naindev.com/#proyectos?utm_source=gamehaven&utm_medium=demo&utm_campaign=portfolio";
+    private const string RepositoryUrl = "https://github.com/Nain9Dev/GameHaven";
+    private const string SwaggerUrl = "https://gamehaven-97og.onrender.com/swagger";
+
+    protected override void OnInitialized() => Store.Changed += OnStoreChanged;
+
+    private void OnStoreChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Store.Changed -= OnStoreChanged;
+}

@@ -1,83 +1,291 @@
 @page "/"
-@using GameHaven.WebUI.Services
-@inject HttpClient Http
-@inject UserService UserService
-@inject IJSRuntime JS
+@implements IAsyncDisposable
+@inject StoreClient Store
+@inject ToastService Toasts
+@inject BrowserEffects Effects
 
-<PageTitle>GameHaven - Tienda</PageTitle>
+<PageTitle>GameHaven — Tienda indie construida con .NET 10 y Blazor</PageTitle>
 
-<div class="store-container">
-    @if (games == null)
+<section class="hero">
+    <canvas id="hero-canvas" class="hero-canvas" aria-hidden="true"></canvas>
+
+    <div class="shell hero-inner">
+        <span class="hero-eyebrow">
+            <strong>Demo técnica</strong> · Clean Architecture sobre .NET 10
+        </span>
+
+        <h1>Una tienda digital que <span class="accent">se explica sola</span></h1>
+
+        <p>
+            GameHaven es un escaparate funcional: catálogo, carrito y biblioteca reales
+            servidos por Minimal APIs, renderizados en Blazor WebAssembly y desplegados
+            con coste de infraestructura cero. Trastea con la tienda y después mira cómo
+            está construida por dentro.
+        </p>
+
+        <div class="hero-actions">
+            <button class="btn-primary" @onclick="ScrollToCatalogAsync">Explorar el catálogo</button>
+            <a class="btn-ghost" href="arquitectura">Ver la arquitectura</a>
+        </div>
+
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <strong>@(Store.Catalog.Count > 0 ? Store.Catalog.Count.ToString() : "—")</strong>
+                <span>juegos en catálogo</span>
+            </div>
+            <div class="hero-stat">
+                <strong>@(Genres.Length > 1 ? (Genres.Length - 1).ToString() : "—")</strong>
+                <span>géneros</span>
+            </div>
+            <div class="hero-stat">
+                <strong>5</strong>
+                <span>capas de arquitectura</span>
+            </div>
+            <div class="hero-stat">
+                <strong>0 €</strong>
+                <span>coste de infraestructura</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="shell" id="catalogo">
+    @if (Store.Mode == StoreMode.Offline)
     {
-        <p><em>Cargando el catálogo más épico...</em></p>
+        <div class="status-banner" role="status">
+            <p>
+                <strong>Modo sin conexión.</strong>
+                La API vive en un contenedor gratuito que se duerme tras un rato sin uso y
+                tarda hasta un minuto en arrancar. Mientras tanto estás viendo una copia
+                local del catálogo y el carrito se guarda en tu navegador.
+            </p>
+            <button class="btn-ghost" @onclick="RetryAsync" disabled="@isRetrying">
+                @(isRetrying ? "Conectando…" : "Reintentar conexión")
+            </button>
+        </div>
+    }
+
+    <div class="store-toolbar">
+        <label class="search-field">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z" />
+            </svg>
+            <input type="search" placeholder="Buscar por título, estudio o género…"
+                   aria-label="Buscar en el catálogo"
+                   value="@searchTerm" @oninput="OnSearchInput" />
+        </label>
+
+        <select class="select-field" aria-label="Ordenar catálogo"
+                value="@sortOrder" @onchange="OnSortChanged">
+            <option value="featured">Destacados</option>
+            <option value="rating">Mejor valorados</option>
+            <option value="price-asc">Precio: de menor a mayor</option>
+            <option value="price-desc">Precio: de mayor a menor</option>
+            <option value="discount">Mayor descuento</option>
+            <option value="newest">Novedades</option>
+        </select>
+    </div>
+
+    <div class="genre-rail" role="group" aria-label="Filtrar por género">
+        @foreach (var genre in Genres)
+        {
+            <button type="button" class="genre-chip @(genre == selectedGenre ? "active" : "")"
+                    @key="genre" @onclick="() => SelectGenre(genre)">
+                @genre
+            </button>
+        }
+    </div>
+
+    @if (Store.Mode == StoreMode.Connecting)
+    {
+        <div class="game-grid">
+            @for (var i = 0; i < 8; i++)
+            {
+                <div class="skeleton-card" aria-hidden="true">
+                    <div class="skeleton-block skeleton-cover"></div>
+                    <div class="skeleton-block skeleton-line"></div>
+                    <div class="skeleton-block skeleton-line short"></div>
+                </div>
+            }
+        </div>
+    }
+    else if (VisibleGames.Count == 0)
+    {
+        <div class="empty-state">
+            <h3>Sin resultados</h3>
+            <p>Ningún juego coincide con la búsqueda actual. Prueba con otro término o quita el filtro de género.</p>
+            <button class="btn-ghost" @onclick="ClearFilters">Limpiar filtros</button>
+        </div>
     }
     else
     {
-        <div class="game-grid">
-            @foreach (var game in games)
+        <p class="result-count">
+            @VisibleGames.Count de @Store.Catalog.Count juegos
+            @if (Store.Mode == StoreMode.Live)
             {
-                <div class="game-card">
-                    <img src="Images/@game.CoverImageUrl" alt="@game.Title" class="game-cover" onerror="this.src='Images/001-DeathInProgress.png'" />
-                    <div class="game-info">
-                        <h3 class="game-title">@game.Title</h3>
-                        <p class="game-developer">@game.Developer</p>
-                        <div class="game-price-row">
-                            @if (game.DiscountPercentage > 0)
-                            {
-                                <span class="discount-badge">-@game.DiscountPercentage%</span>
-                                <div>
-                                    <span class="price-original">@game.BasePrice.ToString("C")</span>
-                                    <span class="price-tag">@game.CurrentPrice.ToString("C")</span>
-                                </div>
-                            }
-                            else
-                            {
-                                <span></span>
-                                <span class="price-tag">@game.BasePrice.ToString("C")</span>
-                            }
-                        </div>
-                        <button class="btn-primary" style="margin-top: 16px; width: 100%;" @onclick="() => AddToCart(game.Id)">
-                            Añadir al Carrito
-                        </button>
-                    </div>
-                </div>
+                <text>· datos en vivo desde la API</text>
+            }
+        </p>
+
+        <div class="game-grid" data-game-grid>
+            @foreach (var game in VisibleGames)
+            {
+                <GameCard @key="game.Id"
+                          Game="game"
+                          Owned="Store.Owns(game.Id)"
+                          InCart="Store.InCart(game.Id)"
+                          OnAdd="AddToCartAsync"
+                          OnRemove="RemoveFromCartAsync"
+                          OnDetails="ShowDetails" />
             }
         </div>
     }
 </div>
 
+<GameDetailDialog Game="selectedGame"
+                  Owned="@(selectedGame is not null && Store.Owns(selectedGame.Id))"
+                  InCart="@(selectedGame is not null && Store.InCart(selectedGame.Id))"
+                  OnClose="CloseDetails"
+                  OnAdd="AddToCartAsync"
+                  OnRemove="RemoveFromCartAsync" />
+
 @code {
-    private GameDto[]? games;
-    private Guid demoUserId;
+    private const string AllGenres = "Todos";
+
+    private string searchTerm = string.Empty;
+    private string sortOrder = "featured";
+    private string selectedGenre = AllGenres;
+    private GameSummary? selectedGame;
+    private bool isRetrying;
+    private bool effectsNeedRefresh = true;
+
+    private string[] Genres =>
+        Store.Catalog
+            .Select(game => game.Genre)
+            .Where(genre => !string.IsNullOrWhiteSpace(genre))
+            .Distinct()
+            .OrderBy(genre => genre, StringComparer.CurrentCulture)
+            .Prepend(AllGenres)
+            .ToArray();
+
+    private List<GameSummary> VisibleGames
+    {
+        get
+        {
+            IEnumerable<GameSummary> query = Store.Catalog;
+
+            if (selectedGenre != AllGenres)
+                query = query.Where(game => game.Genre == selectedGenre);
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var term = searchTerm.Trim();
+                query = query.Where(game =>
+                    game.Title.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    game.Developer.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    game.Genre.Contains(term, StringComparison.OrdinalIgnoreCase));
+            }
+
+            query = sortOrder switch
+            {
+                "rating" => query.OrderByDescending(game => game.RatingPercentage),
+                "price-asc" => query.OrderBy(game => game.CurrentPrice),
+                "price-desc" => query.OrderByDescending(game => game.CurrentPrice),
+                "discount" => query.OrderByDescending(game => game.DiscountPercentage)
+                                   .ThenByDescending(game => game.RatingPercentage),
+                "newest" => query.OrderByDescending(game => game.ReleaseDate),
+                // Featured favours titles that are both well rated and on offer.
+                _ => query.OrderByDescending(game => game.RatingPercentage + game.DiscountPercentage / 2)
+            };
+
+            return query.ToList();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        demoUserId = await UserService.GetUserIdAsync();
-        games = await Http.GetFromJsonAsync<GameDto[]>("api/games");
+        Store.Changed += OnStoreChanged;
+        await Store.EnsureInitializedAsync();
     }
 
-    private async Task AddToCart(Guid gameId)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var response = await Http.PostAsJsonAsync($"api/cart/{demoUserId}/add", new { GameId = gameId });
-        if (response.IsSuccessStatusCode)
+        if (firstRender)
         {
-            await JS.InvokeVoidAsync("alert", "Juego añadido al carrito.");
+            await Effects.InitHeroAsync("hero-canvas");
         }
-        else
+
+        if (effectsNeedRefresh)
         {
-            var error = await response.Content.ReadAsStringAsync();
-            await JS.InvokeVoidAsync("alert", $"Error: {error}");
+            effectsNeedRefresh = false;
+            await Effects.InitTiltAsync("[data-game-grid]");
+            await Effects.InitRevealAsync();
         }
     }
 
-    public class GameDto
+    private void OnStoreChanged()
     {
-        public Guid Id { get; set; }
-        public string Title { get; set; } = "";
-        public string Developer { get; set; } = "";
-        public decimal BasePrice { get; set; }
-        public decimal CurrentPrice { get; set; }
-        public int DiscountPercentage { get; set; }
-        public string CoverImageUrl { get; set; } = "";
+        effectsNeedRefresh = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnSearchInput(ChangeEventArgs args)
+    {
+        searchTerm = args.Value?.ToString() ?? string.Empty;
+        effectsNeedRefresh = true;
+    }
+
+    private void OnSortChanged(ChangeEventArgs args)
+    {
+        sortOrder = args.Value?.ToString() ?? "featured";
+        effectsNeedRefresh = true;
+    }
+
+    private void SelectGenre(string genre)
+    {
+        selectedGenre = genre;
+        effectsNeedRefresh = true;
+    }
+
+    private void ClearFilters()
+    {
+        searchTerm = string.Empty;
+        selectedGenre = AllGenres;
+        effectsNeedRefresh = true;
+    }
+
+    private void ShowDetails(GameSummary game) => selectedGame = game;
+
+    private void CloseDetails() => selectedGame = null;
+
+    private async Task AddToCartAsync(GameSummary game) => Report(await Store.AddToCartAsync(game.Id));
+
+    private async Task RemoveFromCartAsync(GameSummary game) => Report(await Store.RemoveFromCartAsync(game.Id));
+
+    private void Report(StoreResult result)
+    {
+        if (result.Succeeded) Toasts.Success(result.Message);
+        else Toasts.Error(result.Message);
+    }
+
+    private async Task RetryAsync()
+    {
+        isRetrying = true;
+        await Store.RetryAsync();
+        isRetrying = false;
+
+        Toasts.Info(Store.Mode == StoreMode.Live
+            ? "Conectado a la API. Catálogo en vivo."
+            : "La API sigue arrancando. Seguimos en modo local.");
+    }
+
+    private Task ScrollToCatalogAsync() => Effects.ScrollIntoViewAsync("catalogo");
+
+    public async ValueTask DisposeAsync()
+    {
+        Store.Changed -= OnStoreChanged;
+        await Effects.DisposeHeroAsync();
+        await Effects.DisposeTiltAsync();
+        await Effects.DisposeAsync();
     }
 }

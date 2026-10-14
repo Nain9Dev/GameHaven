@@ -1,14 +1,50 @@
-# GameHaven
-Welcome to GameHaven, your ultimate indie game hub. Think of it as a digital playground
-packed with unique games, made possible with the cutting-edge C#, Windows Presentation
-Foundation (.NET 4.7.2), and SQL Server 2022. These tech terms might seem complex, but they
-simply make GameHaven run like a dream.
-And let's not forget the Hamburger Menu, our secret sauce for a sleek front-end design. It makes
-browsing our game trove as easy as pie. More than just a desktop application, GameHaven is a
-vibrant marketplace that champions creativity and indie game developers.
-But our mission doesn't stop at providing a platform. We're on a quest to reshape the indie
-gaming landscape, delivering games that aren't just engaging but tell a unique story. GameHaven
-offers indie developers the spotlight, a stage to showcase their innovative concepts and skills.
-At the heart of it all, GameHaven is your sanctuary for indie gaming. It's a place where
-unconventional gaming experiences aren't the exception; they're the rule. This is GameHaven,
-where indie gaming dreams take flight. Come join us on this exciting journey!
+# GameHaven · Indie Game Hub & Marketplace
+
+An enterprise-grade indie game marketplace demonstrating the complete architectural modernization of a legacy desktop application (.NET 4.7.2 / WPF) into a cross-platform distributed solution built with **.NET 10 LTS**, **Clean Architecture**, **Domain-Driven Design (DDD)**, and **Vue 3 + TypeScript**.
+
+## Architecture & Solution Structure
+
+The solution (`GameHaven.slnx`) is organized under strict Clean Architecture boundaries:
+
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **`GameHaven.Domain`** | C# / .NET 10 | Pure business entities (`Game`, `Cart`, `UserLibrary`) with strict domain invariants |
+| **`GameHaven.Application`** | C# / .NET 10 | Use cases and repository contracts (`IGameRepository`, `ICartRepository`, `ILibraryRepository`) |
+| **`GameHaven.Infrastructure`** | C# / .NET 10 / EF Core | Data persistence (SQLite / SQL Server), migrations, and test data seeding |
+| **`GameHaven.Api`** | ASP.NET Core (.NET 10) | RESTful API with fixed-window rate limiting, OpenAPI/Swagger, and health checks |
+| **`GameHaven.UnitTests`** | xUnit / FluentAssertions | Comprehensive unit test suite covering domain invariants and monetary calculations |
+| **`GameHaven.Client`** | Vue 3 / TypeScript / Vite | Modern, responsive web storefront with offline fallback and cart checkout workflow |
+| **`GameHaven.DesktopUI`** | .NET 10 Windows (WPF) | Preserved legacy desktop client for migration parity testing |
+
+## Case Study
+
+For the detailed enterprise migration methodology, architectural trade-offs, and before/after metrics:
+- Read [`docs/00-modernization-case-study.md`](docs/00-modernization-case-study.md).
+
+## Local Development & Ports
+
+Synchronized with `Tools/dev-ports.json`:
+- **Web Client (Vue 3)**: Port `5340` (`http://localhost:5340`)
+- **Backend API (.NET 10)**: Port `8180` (`http://localhost:8180`)
+
+### Running the API
+
+```powershell
+dotnet run --project GameHaven.Api
+```
+
+Swagger UI will be available at `http://localhost:8180/swagger`.
+
+### Running the Web Client
+
+```powershell
+cd GameHaven.Client
+npm install
+npm run dev
+```
+
+### Running Tests
+
+```powershell
+dotnet test GameHaven.slnx
+```

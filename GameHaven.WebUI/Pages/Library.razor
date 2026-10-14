@@ -1,104 +1,111 @@
 @page "/library"
-@using GameHaven.WebUI.Services
-@inject HttpClient Http
-@inject UserService UserService
-@inject IJSRuntime JS
-@inject NavigationManager Nav
+@implements IAsyncDisposable
+@inject StoreClient Store
+@inject ToastService Toasts
+@inject BrowserEffects Effects
 
-<PageTitle>GameHaven - Biblioteca</PageTitle>
+<PageTitle>GameHaven — Biblioteca</PageTitle>
 
-<div class="store-container" style="padding: 40px 24px;">
-    <h2 style="margin-bottom: 24px;">Tu Colección de Juegos</h2>
-    
-    @if (library == null)
+<div class="shell">
+    <header class="page-header">
+        <h1>Tu biblioteca</h1>
+        <p>
+            Los juegos que has «comprado» en esta demo. La sesión es anónima y vive solo
+            en tu navegador, así que cada visitante tiene su propia biblioteca.
+        </p>
+    </header>
+
+    @if (Store.Mode == StoreMode.Connecting)
     {
-        <p><em>Cargando...</em></p>
+        <div class="game-grid">
+            @for (var i = 0; i < 4; i++)
+            {
+                <div class="skeleton-card" aria-hidden="true">
+                    <div class="skeleton-block skeleton-cover"></div>
+                    <div class="skeleton-block skeleton-line"></div>
+                    <div class="skeleton-block skeleton-line short"></div>
+                </div>
+            }
+        </div>
     }
-    else if (!library.OwnedGames.Any())
+    else if (OwnedGames.Count == 0)
     {
         <div class="empty-state">
-            <p>Aún no tienes juegos en tu biblioteca.</p>
-            <button class="btn-primary" @onclick='() => Nav.NavigateTo("")'>Ir a la Tienda</button>
+            <h3>Todavía no tienes juegos</h3>
+            <p>Completa una compra de prueba en la tienda y aparecerán aquí, listos para lanzarse.</p>
+            <a class="btn-primary" href="">Explorar la tienda</a>
         </div>
     }
     else
     {
-        <div class="game-grid">
-            @foreach (var gameId in library.OwnedGames.Select(g => g.GameId))
+        <p class="result-count">@OwnedGames.Count @(OwnedGames.Count == 1 ? "juego" : "juegos") en tu colección</p>
+
+        <div class="game-grid" data-library-grid>
+            @foreach (var game in OwnedGames)
             {
-                var gameDetails = GetGameDetails(gameId);
-                if (gameDetails != null)
-                {
-                    <div class="game-card library-card">
-                        <img src="Images/@gameDetails.CoverImageUrl" alt="@gameDetails.Title" class="game-cover" onerror="this.src='Images/001-DeathInProgress.png'" />
-                        <div class="game-info" style="text-align: center;">
-                            <h3 class="game-title">@gameDetails.Title</h3>
-                            <button class="btn-primary play-btn" @onclick="() => PlayGame(gameDetails.Title)">
-                                JUGAR
+                <article class="game-card library-card" @key="game.Id" data-tilt-card data-reveal>
+                    <div class="game-cover-frame">
+                        <img class="game-cover" src="@($"Images/{game.CoverImageUrl}")"
+                             alt="@($"Portada de {game.Title}")" loading="lazy" decoding="async"
+                             onerror="this.onerror=null;this.src='Images/001-DeathInProgress.png'" />
+                        <div class="cover-badges">
+                            <span class="genre-badge">@game.Genre</span>
+                        </div>
+                    </div>
+
+                    <div class="game-info">
+                        <h3 class="game-title">@game.Title</h3>
+                        <span class="game-developer">@game.Developer</span>
+
+                        <div class="game-actions" style="margin-top:auto; padding-top:1rem;">
+                            <button class="btn-primary play-btn btn-block" @onclick="() => Play(game)">
+                                Jugar
                             </button>
                         </div>
                     </div>
-                }
+                </article>
             }
         </div>
     }
 </div>
 
-<style>
-    .library-card {
-        border: 2px solid transparent;
-    }
-    .library-card:hover {
-        border: 2px solid var(--color-primary);
-    }
-    .play-btn {
-        width: 100%;
-        margin-top: 12px;
-        background: linear-gradient(135deg, #4caf50, #2e7d32); /* Green play button like Steam */
-    }
-    .play-btn:hover {
-        filter: brightness(1.2);
-    }
-</style>
-
 @code {
-    private LibraryDto? library;
-    private GameDto[]? allGames;
-    private Guid demoUserId;
+    private bool effectsNeedRefresh = true;
+
+    private List<GameSummary> OwnedGames =>
+        Store.Catalog
+            .Where(game => Store.Owns(game.Id))
+            .OrderBy(game => game.Title, StringComparer.CurrentCulture)
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
-        demoUserId = await UserService.GetUserIdAsync();
-        allGames = await Http.GetFromJsonAsync<GameDto[]>("api/games");
-        library = await Http.GetFromJsonAsync<LibraryDto>($"api/library/{demoUserId}");
+        Store.Changed += OnStoreChanged;
+        await Store.EnsureInitializedAsync();
     }
 
-    private GameDto? GetGameDetails(Guid gameId)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        return allGames?.FirstOrDefault(g => g.Id == gameId);
+        if (!effectsNeedRefresh) return;
+        effectsNeedRefresh = false;
+
+        await Effects.InitTiltAsync("[data-library-grid]");
+        await Effects.InitRevealAsync();
     }
 
-    private async Task PlayGame(string title)
+    private void OnStoreChanged()
     {
-        await JS.InvokeVoidAsync("alert", $"Iniciando {title}... ¡Diviértete!");
+        effectsNeedRefresh = true;
+        InvokeAsync(StateHasChanged);
     }
 
-    public class LibraryDto
-    {
-        public Guid UserId { get; set; }
-        public List<OwnedGameDto> OwnedGames { get; set; } = new();
-    }
+    private void Play(GameSummary game) =>
+        Toasts.Info($"Lanzando {game.Title}… (es una demo: aquí no hay ejecutable que arrancar)");
 
-    public class OwnedGameDto
+    public async ValueTask DisposeAsync()
     {
-        public Guid GameId { get; set; }
-        public int PlayTimeMinutes { get; set; }
-    }
-
-    public class GameDto
-    {
-        public Guid Id { get; set; }
-        public string Title { get; set; } = "";
-        public string CoverImageUrl { get; set; } = "";
+        Store.Changed -= OnStoreChanged;
+        await Effects.DisposeTiltAsync();
+        await Effects.DisposeAsync();
     }
 }

@@ -4,5 +4,6 @@
   <Project Path="GameHaven.DesktopUI/GameHaven.DesktopUI.csproj" />
   <Project Path="GameHaven.Domain/GameHaven.Domain.csproj" />
   <Project Path="GameHaven.Infrastructure/GameHaven.Infrastructure.csproj" />
+  <Project Path="GameHaven.UnitTests/GameHaven.UnitTests.csproj" />
   <Project Path="GameHaven.WebUI/GameHaven.WebUI.csproj" />
 </Solution>

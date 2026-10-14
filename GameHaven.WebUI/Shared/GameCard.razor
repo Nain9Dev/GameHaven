@@ -1,0 +1,73 @@
+@* Storefront card. The data-tilt-card hook is what gamehaven.js rotates. *@
+
+<article class="game-card @ExtraClass" data-tilt-card data-reveal>
+    <div class="game-cover-frame" role="button" tabindex="0"
+         aria-label="@($"Ver detalles de {Game.Title}")"
+         @onclick="OnOpenDetails" @onkeydown="HandleKeyDown">
+        <img class="game-cover" src="@CoverPath" alt="@($"Portada de {Game.Title}")"
+             loading="lazy" decoding="async" onerror="this.onerror=null;this.src='Images/001-DeathInProgress.png'" />
+
+        <div class="cover-badges">
+            <span class="genre-badge">@Game.Genre</span>
+            @if (Game.HasDiscount)
+            {
+                <span class="discount-badge">-@Game.DiscountPercentage%</span>
+            }
+        </div>
+
+        <span class="rating-pill @(Game.RatingPercentage >= 75 ? "" : "is-mixed")"
+              title="@($"{Game.RatingLabel} ({Game.RatingPercentage}%)")">
+            <span class="dot"></span>@Game.RatingPercentage%
+        </span>
+    </div>
+
+    <div class="game-info">
+        <h3 class="game-title">@Game.Title</h3>
+        <span class="game-developer">@Game.Developer</span>
+        <p class="game-tagline">@Game.Description</p>
+
+        <div class="game-price-row">
+            @if (Game.HasDiscount)
+            {
+                <span class="price-original">@Money.Format(Game.BasePrice)</span>
+            }
+            <span class="price-tag">@Money.Format(Game.CurrentPrice)</span>
+        </div>
+
+        <div class="game-actions">
+            @if (Owned)
+            {
+                <button class="btn-primary btn-owned btn-block" disabled>En tu biblioteca</button>
+            }
+            else if (InCart)
+            {
+                <button class="btn-ghost btn-block" @onclick="OnRemoveFromCart">Quitar del carrito</button>
+            }
+            else
+            {
+                <button class="btn-primary btn-block" @onclick="OnAddToCart">Añadir al carrito</button>
+            }
+        </div>
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public GameSummary Game { get; set; } = default!;
+    [Parameter] public bool Owned { get; set; }
+    [Parameter] public bool InCart { get; set; }
+    [Parameter] public string? ExtraClass { get; set; }
+    [Parameter] public EventCallback<GameSummary> OnAdd { get; set; }
+    [Parameter] public EventCallback<GameSummary> OnRemove { get; set; }
+    [Parameter] public EventCallback<GameSummary> OnDetails { get; set; }
+
+    private string CoverPath => $"Images/{Game.CoverImageUrl}";
+
+    private Task OnAddToCart() => OnAdd.InvokeAsync(Game);
+
+    private Task OnRemoveFromCart() => OnRemove.InvokeAsync(Game);
+
+    private Task OnOpenDetails() => OnDetails.InvokeAsync(Game);
+
+    private Task HandleKeyDown(KeyboardEventArgs args)
+        => args.Key is "Enter" or " " ? OnDetails.InvokeAsync(Game) : Task.CompletedTask;
+}

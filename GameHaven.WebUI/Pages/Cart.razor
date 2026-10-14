@@ -1,143 +1,155 @@
 @page "/cart"
-@using GameHaven.WebUI.Services
-@inject HttpClient Http
-@inject UserService UserService
-@inject IJSRuntime JS
+@implements IAsyncDisposable
+@inject StoreClient Store
+@inject ToastService Toasts
+@inject BrowserEffects Effects
 @inject NavigationManager Nav
 
-<PageTitle>GameHaven - Carrito</PageTitle>
+<PageTitle>GameHaven — Carrito</PageTitle>
 
-<div class="store-container" style="padding: 40px 24px;">
-    <h2 style="margin-bottom: 24px;">Tu Carrito de Compra</h2>
-    
-    @if (cart == null)
+<div class="shell">
+    <header class="page-header">
+        <h1>Tu carrito</h1>
+        <p>
+            Compra simulada: no se procesa ningún pago. Al confirmar, los juegos pasan a
+            tu biblioteca de demostración.
+        </p>
+    </header>
+
+    @if (Store.Mode == StoreMode.Connecting)
     {
-        <p><em>Cargando...</em></p>
+        <p class="result-count">Cargando carrito…</p>
     }
-    else if (!cart.Items.Any())
+    else if (Store.CartCount == 0)
     {
         <div class="empty-state">
-            <p>Tu carrito está vacío.</p>
-            <button class="btn-primary" @onclick='() => Nav.NavigateTo("")'>Seguir Comprando</button>
+            <h3>El carrito está vacío</h3>
+            <p>Añade algún juego desde la tienda para ver aquí el resumen de la compra.</p>
+            <a class="btn-primary" href="">Ir a la tienda</a>
         </div>
     }
     else
     {
         <div class="cart-layout">
-            <div class="cart-items">
-                @foreach (var item in cart.Items)
+            <div>
+                @foreach (var line in Store.Cart)
                 {
-                    <div class="cart-item-card">
-                        <div class="cart-item-details">
-                            <h3>@GetGameTitle(item.GameId)</h3>
+                    var game = Store.Find(line.GameId);
+                    <div class="cart-item" @key="line.GameId" data-reveal>
+                        <img src="@CoverFor(game)" alt="@($"Portada de {TitleFor(game)}")"
+                             loading="lazy"
+                             onerror="this.onerror=null;this.src='Images/001-DeathInProgress.png'" />
+
+                        <div>
+                            <h3>@TitleFor(game)</h3>
+                            @if (game is not null)
+                            {
+                                <span class="genre-badge">@game.Genre</span>
+                            }
                         </div>
-                        <div class="cart-item-price">
-                            <span class="price-tag">@item.PriceAtAddedTime.ToString("C")</span>
+
+                        <div class="cart-item-side">
+                            <span class="price-tag">@Money.Format(line.PriceAtAddedTime)</span>
+                            <button class="link-danger" type="button"
+                                    @onclick="() => RemoveAsync(line.GameId)">
+                                Quitar
+                            </button>
                         </div>
                     </div>
                 }
             </div>
-            
-            <div class="cart-summary">
+
+            <aside class="cart-summary" data-reveal>
                 <h3>Resumen</h3>
+
                 <div class="summary-row">
-                    <span>Total estimado</span>
-                    <span class="price-tag" style="font-size: 1.2rem;">@cart.TotalAmount.ToString("C")</span>
+                    <span>@Store.CartCount @(Store.CartCount == 1 ? "juego" : "juegos")</span>
+                    <span>@Money.Format(Store.CartTotal)</span>
                 </div>
-                <button class="btn-primary" style="width: 100%; margin-top: 24px; padding: 14px;" @onclick="Checkout">
-                    Completar Compra
+
+                <div class="summary-row">
+                    <span>Ahorro por descuentos</span>
+                    <span>@Money.Format(Savings)</span>
+                </div>
+
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span class="price-tag">@Money.Format(Store.CartTotal)</span>
+                </div>
+
+                <button class="btn-primary btn-block" style="margin-top:1.25rem;"
+                        @onclick="CheckoutAsync" disabled="@isProcessing">
+                    @(isProcessing ? "Procesando…" : "Completar compra")
                 </button>
-            </div>
+
+                <p class="summary-note">
+                    Demostración sin pasarela de pago. No se solicitan ni almacenan datos
+                    bancarios en ningún momento.
+                </p>
+            </aside>
         </div>
     }
 </div>
 
-<style>
-    .cart-layout {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 32px;
-    }
-    .cart-item-card {
-        background: rgba(16, 22, 42, 0.6);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(120, 144, 255, 0.2);
-        padding: 16px 24px;
-        border-radius: 8px;
-        margin-bottom: 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .cart-summary {
-        background: rgba(16, 22, 42, 0.8);
-        padding: 24px;
-        border-radius: 12px;
-        border: 1px solid rgba(120, 144, 255, 0.3);
-        height: fit-content;
-    }
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 16px;
-        border-top: 1px solid rgba(255,255,255,0.1);
-        padding-top: 16px;
-    }
-</style>
-
 @code {
-    private CartDto? cart;
-    private GameDto[]? allGames;
-    private Guid demoUserId;
+    private bool isProcessing;
+    private bool effectsNeedRefresh = true;
+
+    /// <summary>Difference between list price and the price captured in the cart.</summary>
+    private decimal Savings =>
+        Store.Cart.Sum(line => (Store.Find(line.GameId)?.BasePrice ?? line.PriceAtAddedTime) - line.PriceAtAddedTime);
 
     protected override async Task OnInitializedAsync()
     {
-        demoUserId = await UserService.GetUserIdAsync();
-        await LoadData();
+        Store.Changed += OnStoreChanged;
+        await Store.EnsureInitializedAsync();
     }
 
-    private async Task LoadData()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        allGames = await Http.GetFromJsonAsync<GameDto[]>("api/games");
-        cart = await Http.GetFromJsonAsync<CartDto>($"api/cart/{demoUserId}");
+        if (!effectsNeedRefresh) return;
+        effectsNeedRefresh = false;
+        await Effects.InitRevealAsync();
     }
 
-    private string GetGameTitle(Guid gameId)
+    private void OnStoreChanged()
     {
-        return allGames?.FirstOrDefault(g => g.Id == gameId)?.Title ?? "Juego Desconocido";
+        effectsNeedRefresh = true;
+        InvokeAsync(StateHasChanged);
     }
 
-    private async Task Checkout()
+    private static string TitleFor(GameSummary? game) => game?.Title ?? "Juego no disponible";
+
+    private static string CoverFor(GameSummary? game) =>
+        $"Images/{game?.CoverImageUrl ?? "001-DeathInProgress.png"}";
+
+    private async Task RemoveAsync(Guid gameId)
     {
-        var response = await Http.PostAsync($"api/cart/{demoUserId}/checkout", null);
-        if (response.IsSuccessStatusCode)
+        var result = await Store.RemoveFromCartAsync(gameId);
+        if (result.Succeeded) Toasts.Info(result.Message);
+        else Toasts.Error(result.Message);
+    }
+
+    private async Task CheckoutAsync()
+    {
+        isProcessing = true;
+        var result = await Store.CheckoutAsync();
+        isProcessing = false;
+
+        if (result.Succeeded)
         {
-            await JS.InvokeVoidAsync("alert", "¡Compra completada con éxito! Los juegos están en tu biblioteca.");
-            Nav.NavigateTo(Nav.BaseUri + "library");
+            Toasts.Success(result.Message);
+            Nav.NavigateTo($"{Nav.BaseUri}library");
         }
         else
         {
-            var error = await response.Content.ReadAsStringAsync();
-            await JS.InvokeVoidAsync("alert", $"Error: {error}");
+            Toasts.Error(result.Message);
         }
     }
 
-    public class CartDto
+    public async ValueTask DisposeAsync()
     {
-        public Guid UserId { get; set; }
-        public decimal TotalAmount { get; set; }
-        public List<CartItemDto> Items { get; set; } = new();
-    }
-
-    public class CartItemDto
-    {
-        public Guid GameId { get; set; }
-        public decimal PriceAtAddedTime { get; set; }
-    }
-
-    public class GameDto
-    {
-        public Guid Id { get; set; }
-        public string Title { get; set; } = "";
+        Store.Changed -= OnStoreChanged;
+        await Effects.DisposeAsync();
     }
 }

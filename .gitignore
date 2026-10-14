@@ -17,3 +17,9 @@ gamehaven.db*
 # Local scratch
 gh_runs.json
 check_gh.py
+
+# Frontend build artifacts
+node_modules/
+dist/
+.vite/
+

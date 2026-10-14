@@ -1,0 +1,66 @@
+@* Detail overlay. Rendered only when a game is selected, so there is no hidden
+   DOM sitting behind the storefront. *@
+
+@if (Game is not null)
+{
+    <div class="modal-backdrop" role="presentation" @onclick="Close">
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="detail-title"
+             @onclick:stopPropagation="true">
+
+            <button class="modal-close" type="button" aria-label="Cerrar" @onclick="Close">&times;</button>
+
+            <img class="modal-cover" src="@($"Images/{Game.CoverImageUrl}")" alt="@($"Portada de {Game.Title}")"
+                 onerror="this.onerror=null;this.src='Images/001-DeathInProgress.png'" />
+
+            <div class="modal-body">
+                <h2 id="detail-title">@Game.Title</h2>
+
+                <div class="modal-meta">
+                    <span class="genre-badge">@Game.Genre</span>
+                    <span class="genre-badge">@Game.Developer</span>
+                    <span class="genre-badge">@Game.ReleaseDate.ToString("yyyy")</span>
+                    <span class="rating-pill @(Game.RatingPercentage >= 75 ? "" : "is-mixed")" style="position:static;">
+                        <span class="dot"></span>@Game.RatingLabel (@Game.RatingPercentage%)
+                    </span>
+                </div>
+
+                <p>@Game.Description</p>
+
+                <div class="modal-footer">
+                    @if (Game.HasDiscount)
+                    {
+                        <span class="discount-badge">-@Game.DiscountPercentage%</span>
+                        <span class="price-original">@Money.Format(Game.BasePrice)</span>
+                    }
+                    <span class="price-tag">@Money.Format(Game.CurrentPrice)</span>
+
+                    <div style="margin-inline-start:auto; display:flex; gap:0.75rem; flex-wrap:wrap;">
+                        @if (Owned)
+                        {
+                            <button class="btn-primary btn-owned" disabled>En tu biblioteca</button>
+                        }
+                        else if (InCart)
+                        {
+                            <button class="btn-ghost" @onclick="() => OnRemove.InvokeAsync(Game)">Quitar del carrito</button>
+                        }
+                        else
+                        {
+                            <button class="btn-primary" @onclick="() => OnAdd.InvokeAsync(Game)">Añadir al carrito</button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public GameSummary? Game { get; set; }
+    [Parameter] public bool Owned { get; set; }
+    [Parameter] public bool InCart { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<GameSummary> OnAdd { get; set; }
+    [Parameter] public EventCallback<GameSummary> OnRemove { get; set; }
+
+    private Task Close() => OnClose.InvokeAsync();
+}

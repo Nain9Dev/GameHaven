@@ -4,28 +4,96 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GameHaven</title>
     <base href="/" />
+
+    <title>GameHaven — Tienda indie con .NET 10 y Blazor WebAssembly</title>
+    <meta name="description" content="Demo pública de una tienda digital construida con Clean Architecture: Blazor WebAssembly, Minimal APIs de .NET 10 y despliegue con coste de infraestructura cero. Un proyecto de naindev.com." />
+    <meta name="author" content="NainDev" />
+    <meta name="theme-color" content="#090a0f" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="GameHaven" />
+    <meta property="og:title" content="GameHaven — Tienda indie con .NET 10 y Blazor WebAssembly" />
+    <meta property="og:description" content="Catálogo, carrito y biblioteca reales sobre Clean Architecture. Demo técnica del portfolio de naindev.com." />
+    <meta property="og:url" content="https://nain9dev.github.io/GameHaven/" />
+    <meta property="og:image" content="https://nain9dev.github.io/GameHaven/icon-192.png" />
+    <meta name="twitter:card" content="summary" />
+
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="canonical" href="https://nain9dev.github.io/GameHaven/" />
+
+    <link rel="preload" href="fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/outfit-700.woff2" as="font" type="font/woff2" crossorigin />
     <link href="app.css" rel="stylesheet" />
     <link href="GameHaven.WebUI.styles.css" rel="stylesheet" />
-    <!-- Google Fonts for Modern Typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* Inlined so the boot screen paints before app.css arrives. */
+        .boot {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            background: #090a0f;
+            color: #a8b4c7;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            text-align: center;
+        }
+
+        .boot-ring {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            border: 2px solid rgba(96, 165, 250, 0.2);
+            border-top-color: #60a5fa;
+            animation: boot-spin 900ms linear infinite;
+        }
+
+        .boot p {
+            margin: 0;
+            font-size: 0.9rem;
+            letter-spacing: 0.01em;
+        }
+
+        .boot strong {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        @keyframes boot-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .boot-ring { animation-duration: 0s; }
+        }
+    </style>
 </head>
 
 <body>
     <div id="app">
-        <div style="display:flex; justify-content:center; align-items:center; height:100vh; background-color:#080b16; color:#7890ff; font-family:'Inter', sans-serif;">
-            <h2>Iniciando GameHaven...</h2>
+        <div class="boot">
+            <div class="boot-ring" role="presentation"></div>
+            <p>
+                <strong>GameHaven</strong>
+                Cargando la tienda…
+            </p>
         </div>
     </div>
 
-    <div id="blazor-error-ui" style="display:none;">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
+    <div id="blazor-error-ui">
+        Se ha producido un error inesperado.
+        <a href="" class="reload">Recargar</a>
+        <a class="dismiss">&times;</a>
     </div>
+
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 

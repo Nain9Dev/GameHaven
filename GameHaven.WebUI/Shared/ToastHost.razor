@@ -1,0 +1,26 @@
+@implements IDisposable
+@inject ToastService Toasts
+
+<div class="toast-stack" aria-live="polite" aria-atomic="false">
+    @foreach (var toast in Toasts.Toasts)
+    {
+        <div class="toast @CssFor(toast.Level)" role="status" @key="toast.Id" @onclick="() => Toasts.Dismiss(toast.Id)">
+            <span>@toast.Message</span>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized() => Toasts.Changed += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private static string CssFor(ToastLevel level) => level switch
+    {
+        ToastLevel.Success => "success",
+        ToastLevel.Error => "error",
+        _ => "info"
+    };
+
+    public void Dispose() => Toasts.Changed -= OnChanged;
+}
