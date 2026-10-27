@@ -1,10 +1,13 @@
 # GameHaven · Indie Game Hub & Marketplace
 
+[![English](https://img.shields.io/badge/Language-English-blue?style=flat-square)](README.md)
+[![Español](https://img.shields.io/badge/Idioma-Espa%C3%B1ol-emerald?style=flat-square)](README.es.md)
+[![Architecture Tests](https://img.shields.io/badge/Architecture%20Tests-NetArchTest%20enforced-80FF00?style=flat-square&logo=checkmarx&logoColor=black)](GameHaven.UnitTests/Architecture/CleanArchitectureTests.cs)
 [![Live Demo](https://img.shields.io/badge/Demo%20Online-gamehaven.naindev.com-38bdf8?style=flat-square&logo=googlechrome&logoColor=white)](https://gamehaven.naindev.com/)
 [![Vue 3](https://img.shields.io/badge/Vue%203-TypeScript-emerald?style=flat-square)](https://gamehaven.naindev.com/)
 [![Zero Cost](https://img.shields.io/badge/Hosting-0%2C00%20%E2%82%AC%20FOSS-emerald?style=flat-square)](https://gamehaven.naindev.com/)
 
-**Demo Online Interactiva:** [https://gamehaven.naindev.com/](https://gamehaven.naindev.com/) (Catálogo interactivo, carrito y biblioteca en cliente, coste 0,00 €)
+**Interactive Online Demo:** [https://gamehaven.naindev.com/](https://gamehaven.naindev.com/) (Interactive catalog, client-side cart and library, 0.00 € recurring cost)
 
 An enterprise-grade indie game marketplace demonstrating the complete architectural modernization of a legacy desktop application (.NET 4.7.2 / WPF) into a cross-platform distributed solution built with **.NET 10 LTS**, **Clean Architecture**, **Domain-Driven Design (DDD)**, and **Vue 3 + TypeScript**.
 
