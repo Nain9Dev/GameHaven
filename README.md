@@ -1,3 +1,9 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.svg">
+  <img alt="GameHaven Architectural Blueprint" src="docs/assets/banner-dark.svg" width="100%">
+</picture>
+
 # GameHaven · Indie Game Hub & Marketplace
 
 [![English](https://img.shields.io/badge/Language-English-blue?style=flat-square)](README.md)
