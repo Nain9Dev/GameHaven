@@ -1,6 +1,6 @@
 # Requirements Traceability Matrix — GameHaven
 
-All 12 requirements defined in [`docs/10-requirements.md`](10-requirements.md) are strictly mapped to automated test suites or deterministic build verifications.
+All 18 requirements defined in [`docs/10-requirements.md`](10-requirements.md) are strictly mapped to automated test suites or deterministic build verifications.
 
 | Requirement ID | Summary | Verification Type | Implementation / Test Target | Status |
 | :--- | :--- | :--- | :--- | :--- |
@@ -16,5 +16,11 @@ All 12 requirements defined in [`docs/10-requirements.md`](10-requirements.md) a
 | **REQ-010** | Client Offline Resilience | Frontend Strategy | `GameHaven.Client/src/api.ts` & `src/data/mockGames.ts` | VERIFIED |
 | **REQ-011** | Ecosystem Bar Integration | Web Component Contract | `GameHaven.Client/index.html` (`<nain-ecosystem-bar current-project="GameHaven">`) | VERIFIED |
 | **REQ-012** | Development Port Governance | Configuration Audit | `dev-ports.json`, `GameHaven.Api/Properties/launchSettings.json`, `GameHaven.Client/vite.config.ts` | VERIFIED |
+| **REQ-013** | Canonical URL | Automated Unit Test | `GameHaven.UnitTests/Seo/SeoBaselineTests.cs::Canonical_Is_The_Host_Root` | PASSED |
+| **REQ-014** | Description | Automated Unit Test | `GameHaven.UnitTests/Seo/SeoBaselineTests.cs::Description_Is_Single_And_Within_Snippet_Length` | PASSED |
+| **REQ-015** | Social Cards | Automated Unit Test | `GameHaven.UnitTests/Seo/SeoBaselineTests.cs::Open_Graph_Matches_The_Canonical`, `Twitter_Card_Is_Complete` | PASSED |
+| **REQ-016** | Structured Data | Automated Unit Test | `GameHaven.UnitTests/Seo/SeoBaselineTests.cs::JsonLd_Parses_And_Names_The_Author` | PASSED |
+| **REQ-017** | Crawl Files | Automated Unit Test | `GameHaven.UnitTests/Seo/SeoBaselineTests.cs::Robots_Advertises_The_Sitemap_And_Blocks_Nothing`, `Sitemap_Lists_The_Canonical_Root`, `LlmsTxt_Starts_With_A_Heading` | PASSED |
+| **REQ-018** | Author Link | Automated Unit Test | `GameHaven.UnitTests/Seo/SeoBaselineTests.cs::Author_Link_Points_To_The_Main_Site` | PASSED |
 
-**Coverage Summary**: 12/12 requirements verified (100% coverage across 25 automated backend tests and frontend validation).
+**Coverage Summary**: 18/18 requirements verified (100% coverage across 34 automated backend tests and frontend validation).
