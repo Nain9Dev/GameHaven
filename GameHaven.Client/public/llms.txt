@@ -1,0 +1,7 @@
+# GameHaven
+
+> Indie game marketplace demo: a Vue 3 storefront with an offline catalog, cart and library, backed by a .NET 10 Clean Architecture solution migrated from a legacy WPF desktop app.
+
+- [Live demo](https://gamehaven.naindev.com/): interactive catalog, client-side cart and library
+- [Source code](https://github.com/Nain9Dev/GameHaven): domain, API, Vue client, architecture tests and migration case study
+- [NainDev](https://www.naindev.com/): the author's main site and project ecosystem

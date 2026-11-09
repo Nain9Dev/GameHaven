@@ -25,3 +25,14 @@ All requirements follow the Easy Approach to Requirements Syntax (EARS).
 - **REQ-010 (Client Offline Resilience)**: When the backend API is unreachable or in demonstration mode, `GameHaven.Client` shall fall back to an embedded client-side catalog snapshot, preserving store browsing, cart mutations, and mock checkout.
 - **REQ-011 (Ecosystem Bar Integration)**: While running in any browser context, `GameHaven.Client` shall mount `<nain-ecosystem-bar>` to provide unified cross-portfolio navigation and telemetry status.
 - **REQ-012 (Development Port Governance)**: When running in local development mode, the system shall bind strictly to port `8180` for the .NET API and port `5340` for the Vue 3 web client, matching `dev-ports.json`.
+
+## 5. Discoverability Requirements
+
+The public demo is the static client published to GitHub Pages, so these requirements apply to the files the browser receives (`GameHaven.Client/index.html` and `GameHaven.Client/public/`).
+
+- **REQ-013 (Canonical URL)**: When a crawler fetches the client entry page, the page shall declare exactly one canonical link equal to `https://gamehaven.naindev.com/`.
+- **REQ-014 (Description)**: When a crawler fetches the client entry page, the page shall carry exactly one meta description of 70 to 160 characters.
+- **REQ-015 (Social Cards)**: When a link to the demo is shared, the page shall expose Open Graph tags (`og:url` equal to the canonical, absolute `og:image`) and a `summary_large_image` Twitter card.
+- **REQ-016 (Structured Data)**: When a crawler fetches the client entry page, the page shall carry one `SoftwareApplication` JSON-LD block whose author is `https://www.naindev.com/#person`, with `<` escaped.
+- **REQ-017 (Crawl Files)**: When a crawler requests the site root files, the site shall serve `robots.txt` (allow all, advertising the sitemap), `sitemap.xml` (the canonical root) and `llms.txt` (Markdown, H1 first) as real files, not the SPA fallback page.
+- **REQ-018 (Author Link)**: When a crawler fetches the client entry page, the page shall link `rel="author"` to `https://www.naindev.com/`.
