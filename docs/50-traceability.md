@@ -1,6 +1,6 @@
 # Requirements Traceability Matrix — GameHaven
 
-All 18 requirements defined in [`docs/10-requirements.md`](10-requirements.md) are strictly mapped to automated test suites or deterministic build verifications.
+All 21 requirements defined in [`docs/10-requirements.md`](10-requirements.md) are strictly mapped to automated test suites or deterministic build verifications.
 
 | Requirement ID | Summary | Verification Type | Implementation / Test Target | Status |
 | :--- | :--- | :--- | :--- | :--- |
@@ -22,5 +22,8 @@ All 18 requirements defined in [`docs/10-requirements.md`](10-requirements.md) a
 | **REQ-016** | Structured Data | Automated Unit Test | `GameHaven.UnitTests/Seo/SeoBaselineTests.cs::JsonLd_Parses_And_Names_The_Author` | PASSED |
 | **REQ-017** | Crawl Files | Automated Unit Test | `GameHaven.UnitTests/Seo/SeoBaselineTests.cs::Robots_Advertises_The_Sitemap_And_Blocks_Nothing`, `Sitemap_Lists_The_Canonical_Root`, `LlmsTxt_Starts_With_A_Heading` | PASSED |
 | **REQ-018** | Author Link | Automated Unit Test | `GameHaven.UnitTests/Seo/SeoBaselineTests.cs::Author_Link_Points_To_The_Main_Site` | PASSED |
+| **REQ-019** | Web App Manifest | Automated Unit Test | `GameHaven.UnitTests/Seo/PwaInstallTests.cs::Manifest_Names_The_App_And_Opens_It_Standalone` | PASSED |
+| **REQ-020** | Install Icons | Automated Unit Test | `GameHaven.UnitTests/Seo/PwaInstallTests.cs::Manifest_Icons_Exist_At_The_Declared_Size` | PASSED |
+| **REQ-021** | iOS Head Tags | Automated Unit Test | `GameHaven.UnitTests/Seo/PwaInstallTests.cs::Page_Links_The_Manifest_And_Carries_The_Ios_Tags` | PASSED |
 
-**Coverage Summary**: 18/18 requirements verified (100% coverage across 34 automated backend tests and frontend validation).
+**Coverage Summary**: 21/21 requirements verified (100% coverage across 37 automated backend tests and frontend validation).
