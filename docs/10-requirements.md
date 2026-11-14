@@ -36,3 +36,11 @@ The public demo is the static client published to GitHub Pages, so these require
 - **REQ-016 (Structured Data)**: When a crawler fetches the client entry page, the page shall carry one `SoftwareApplication` JSON-LD block whose author is `https://www.naindev.com/#person`, with `<` escaped.
 - **REQ-017 (Crawl Files)**: When a crawler requests the site root files, the site shall serve `robots.txt` (allow all, advertising the sitemap), `sitemap.xml` (the canonical root) and `llms.txt` (Markdown, H1 first) as real files, not the SPA fallback page.
 - **REQ-018 (Author Link)**: When a crawler fetches the client entry page, the page shall link `rel="author"` to `https://www.naindev.com/`.
+
+## 6. Installability Requirements
+
+See `specs/next-pwa-install/spec.md`. Installable only: no service worker, no cache.
+
+- **REQ-019 (Web App Manifest)**: When a phone browser loads the client entry page, the page shall link `manifest.webmanifest`, which declares `standalone` display, the name and short name `GameHaven`, the page description, and `#090a0f` as theme and background colour.
+- **REQ-020 (Install Icons)**: When the manifest is read, it shall declare PNG icons of 192 px and 512 px (`any`) and a 512 px `maskable` icon, and every declared file shall exist at its declared size, together with a 180 px `apple-touch-icon`.
+- **REQ-021 (iOS Head Tags)**: When the client entry page is opened on iOS Safari, the page shall carry `apple-touch-icon`, `apple-mobile-web-app-title`, `mobile-web-app-capable`, `apple-mobile-web-app-capable`, the `black` status bar style and a `theme-color` meta.
